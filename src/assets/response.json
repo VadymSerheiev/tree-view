@@ -1,0 +1,111 @@
+[
+  {
+    "id": "folder-a9738921",
+    "type": "folder",
+    "name": "My Documents",
+    "children": [
+      {
+        "id": "folder-f84d21e9",
+        "type": "folder",
+        "name": "Projects",
+        "children": [
+          {
+            "id": "folder-43b1820e",
+            "type": "folder",
+            "name": "Project A",
+            "children": [
+              {
+                "id": "file-5d8e181b",
+                "type": "file",
+                "name": "readme.md"
+              },
+              {
+                "id": "file-d327910f",
+                "type": "file",
+                "name": "source_code.zip"
+              }
+            ]
+          },
+          {
+            "id": "folder-b98f2e5c",
+            "type": "folder",
+            "name": "Project B",
+            "children": [
+              {
+                "id": "folder-5482649f",
+                "name": "Project Reports",
+                "type": "folder",
+                "children": [
+                  {
+                    "id": "file-8732231a",
+                    "name": "Project B Report.pdf",
+                    "type": "file"
+                  }
+                ]
+              },
+              {
+                "id": "file-2317486d",
+                "type": "file",
+                "name": "readme.md"
+              },
+              {
+                "id": "file-5482649f",
+                "type": "file",
+                "name": "source_code.zip"
+              }
+            ]
+          },
+          {
+            "id": "file-c721fa0d",
+            "type": "file",
+            "name": "project_plan.pdf"
+          }
+        ]
+      },
+      {
+        "id": "file-27e9b4c3",
+        "type": "file",
+        "name": "important_notes.txt"
+      },
+      {
+        "id": "file-7a21493c",
+        "name": "personal.txt",
+        "type": "file"
+      },
+      {
+        "id": "file-1c98b37a",
+        "type": "file",
+        "name": "shopping_list.txt"
+      }
+    ]
+  },
+  {
+    "id": "folder-70fjh13i",
+    "type": "folder",
+    "name": "My Images",
+    "children": [
+      {
+        "id": "folder-532a23k3",
+        "type": "folder",
+        "name": "Vacation Photos",
+        "children": [
+          {
+            "id": "file-9iop54f2",
+            "type": "file",
+            "name": "beach.jpg"
+          },
+          {
+            "id": "file-12df45l78",
+            "type": "file",
+            "name": "mountains.jpg"
+          }
+        ]
+      },
+      {
+        "id": "file-12cbw41j",
+        "type": "file",
+        "name": "image1.jpg"
+      }
+    ]
+  }
+]
