@@ -3,26 +3,31 @@
     "id": "folder-a9738921",
     "type": "folder",
     "name": "My Documents",
+    "access": "read",
     "children": [
       {
         "id": "folder-f84d21e9",
         "type": "folder",
         "name": "Projects",
+        "access": "readWrite",
         "children": [
           {
             "id": "folder-43b1820e",
             "type": "folder",
             "name": "Project A",
+            "access": "readWrite",
             "children": [
               {
                 "id": "file-5d8e181b",
                 "type": "file",
-                "name": "readme.md"
+                "name": "readme.md",
+                "access": "readWrite"
               },
               {
                 "id": "file-d327910f",
                 "type": "file",
-                "name": "source_code.zip"
+                "name": "source_code.zip",
+                "access": "readWrite"
               }
             ]
           },
@@ -30,52 +35,61 @@
             "id": "folder-b98f2e5c",
             "type": "folder",
             "name": "Project B",
+            "access": "readWrite",
             "children": [
               {
                 "id": "folder-5482649f",
                 "name": "Project Reports",
                 "type": "folder",
+                "access": "readWrite",
                 "children": [
                   {
                     "id": "file-8732231a",
                     "name": "Project B Report.pdf",
-                    "type": "file"
+                    "type": "file",
+                    "access": "readWrite"
                   }
                 ]
               },
               {
                 "id": "file-2317486d",
                 "type": "file",
-                "name": "readme.md"
+                "name": "readme.md",
+                "access": "readWrite"
               },
               {
                 "id": "file-5482649f",
                 "type": "file",
-                "name": "source_code.zip"
+                "name": "source_code.zip",
+                "access": "readWrite"
               }
             ]
           },
           {
             "id": "file-c721fa0d",
             "type": "file",
-            "name": "project_plan.pdf"
+            "name": "project_plan.pdf",
+            "access": "readWrite"
           }
         ]
       },
       {
         "id": "file-27e9b4c3",
         "type": "file",
-        "name": "important_notes.txt"
+        "name": "important_notes.txt",
+        "access": "readWrite"
       },
       {
         "id": "file-7a21493c",
         "name": "personal.txt",
-        "type": "file"
+        "type": "file",
+        "access": "readWrite"
       },
       {
         "id": "file-1c98b37a",
         "type": "file",
-        "name": "shopping_list.txt"
+        "name": "shopping_list.txt",
+        "access": "readWrite"
       }
     ]
   },
@@ -83,28 +97,33 @@
     "id": "folder-70fjh13i",
     "type": "folder",
     "name": "My Images",
+    "access": "read",
     "children": [
       {
         "id": "folder-532a23k3",
         "type": "folder",
         "name": "Vacation Photos",
+        "access": "readWrite",
         "children": [
           {
             "id": "file-9iop54f2",
             "type": "file",
-            "name": "beach.jpg"
+            "name": "beach.jpg",
+            "access": "readWrite"
           },
           {
             "id": "file-12df45l78",
             "type": "file",
-            "name": "mountains.jpg"
+            "name": "mountains.jpg",
+            "access": "readWrite"
           }
         ]
       },
       {
         "id": "file-12cbw41j",
         "type": "file",
-        "name": "image1.jpg"
+        "name": "image1.jpg",
+        "access": "readWrite"
       }
     ]
   },
@@ -112,6 +131,7 @@
     "id": "folder-123fk0pl",
     "type": "folder",
     "name": "My Videos",
+    "access": "read",
     "children": []
   }
 ]

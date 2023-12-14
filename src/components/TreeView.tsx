@@ -3,7 +3,7 @@ import React, { useState, ChangeEvent, useEffect } from 'react';
 import Box from '@mui/material/Box';
 import { TreeView as MuiTreeView } from '@mui/x-tree-view/TreeView';
 import { TreeItem as MuiTreeItem } from '@mui/x-tree-view/TreeItem';
-import { Button, Input, InputAdornment } from '@mui/material';
+import { Button, Input, InputAdornment, MenuItem, TextField } from '@mui/material';
 // icons
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
@@ -14,18 +14,38 @@ import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
 import response from '../assets/response.json';
 
 
+type UserAccess = 'read' | 'write' | 'readWrite';
+type UserOperations = 'read' | 'write' | 'delete';
 interface RenderTree {
   id: string;
   name: string;
   type: 'folder' | 'file';
+  access: UserAccess;
   children?: RenderTree[];
 }
+
+const permissions = [
+  {
+    value: 'read',
+    label: 'Read',
+  },
+  {
+    value: 'write',
+    label: 'Write',
+  },
+  {
+    value: 'readWrite',
+    label: 'Read and Write',
+  },
+]
 
 export default function TreeView() {
   const [treeData, setTreeData] = useState<RenderTree[]>(response as RenderTree[]);
   const [query, setQuery] = useState<string>('');
   const [filteredData, setFilteredData] = useState<RenderTree[]>(response as RenderTree[]);
   const [selectedNodeId, setSelectedNodeId] = useState<string>('');
+  const [userAccess, setUserAccess] = useState<UserAccess>('read');
+
 
   useEffect(() => {
     if (query) {
@@ -50,9 +70,44 @@ export default function TreeView() {
   }
 
   const deleteNode = (nodeId: string) => {
-    const updatedTreeData = removeNode(treeData, nodeId);
-    setTreeData(updatedTreeData);
-    setFilteredData(filterBy(updatedTreeData, query));
+    const nodeToDelete = findNode(treeData, nodeId);
+    if (nodeToDelete) {
+      const hasDeleteAccess = checkAccess(nodeToDelete, 'delete');
+      if (hasDeleteAccess) {
+        const updatedTreeData = removeNode(treeData, nodeId);
+        setTreeData(updatedTreeData);
+        setFilteredData(filterBy(updatedTreeData, query));
+      } else {
+        alert(`You don't have permission to delete this ${nodeToDelete.type}.`);
+      }
+    }
+  };
+
+  const findNode = (data: RenderTree[], nodeId: string): RenderTree | undefined => {
+    for (const item of data) {
+      if (item.id === nodeId) {
+        return item;
+      } else if (item.children?.length) {
+        const foundInChildren = findNode(item.children, nodeId);
+        if (foundInChildren) {
+          return foundInChildren;
+        }
+      }
+    }
+    return undefined;
+  };
+
+  const checkAccess = (node: RenderTree, operation: UserOperations): boolean => {
+    switch (operation) {
+      case 'read':
+        return ['read', 'readWrite'].includes(userAccess) && ['read', 'readWrite'].includes(node.access);
+      case 'write':
+        return ['write', 'readWrite'].includes(userAccess) && ['write', 'readWrite'].includes(node.access);
+      case 'delete':
+        return ['readWrite'].includes(userAccess) && ['readWrite'].includes(node.access);
+      default:
+        return false;
+    }
   };
 
   const removeNode = (data: RenderTree[], nodeId: string): RenderTree[] => {
@@ -67,8 +122,12 @@ export default function TreeView() {
     }, []);
   };
 
+  const userAccessHandler = (e: ChangeEvent<HTMLInputElement>) => {
+    setUserAccess(e.target.value as UserAccess);
+  }
+
   const renderTree = (nodes: RenderTree) => {
-    const LabelIcon = <span style={{ display: 'flex' }}>
+    const LabelIcon = <span data-testid={nodes.id} style={{ display: 'flex' }}>
       {nodes.type === 'folder' ?
         <FolderIcon sx={{ marginRight: '10px' }} /> :
         <InsertDriveFileIcon sx={{ marginRight: '10px' }} />}
@@ -91,26 +150,49 @@ export default function TreeView() {
 
   return (
     <Box sx={{ minHeight: 110, flexGrow: 1, maxWidth: 300 }}>
-      <Input
-        id='input-with-icon-adornment'
-        startAdornment={
-          <InputAdornment position='start'>
+      <TextField
+        id="outlined-start-adornment"
+        label="Search"
+        role='search'
+        sx={{ width: '100%', mb: 2 }}
+        InputProps={{
+          startAdornment: <InputAdornment position='start'>
             <PageviewIcon />
-          </InputAdornment>
-        }
-        sx={{ width: '100%', marginBottom: '10px' }}
+          </InputAdornment>,
+        }}
         onChange={queryChangeHandler}
       />
-      <MuiTreeView
-        aria-label='rich object'
-        defaultCollapseIcon={<ExpandMoreIcon />}
-        defaultExpandIcon={<ChevronRightIcon />}
-      >
-        {query ? filteredData.map((item) => renderTree(item)) : treeData.map((item) => renderTree(item))}
-      </MuiTreeView>
-      <Button onClick={() => deleteNode(selectedNodeId)}>
-        Delete
-      </Button>
+      <Box>
+        <MuiTreeView
+          aria-label='rich object'
+          defaultCollapseIcon={<ExpandMoreIcon />}
+          defaultExpandIcon={<ChevronRightIcon />}
+        >
+          {query ? filteredData.map((item) => renderTree(item)) : treeData.map((item) => renderTree(item))}
+        </MuiTreeView>
+      </Box>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
+        <Button
+          variant='outlined'
+          onClick={() => deleteNode(selectedNodeId)}
+        >
+          Delete
+        </Button>
+        <TextField
+          id='outlined-select-currency'
+          select
+          label='Permissions'
+          value={userAccess}
+          onChange={userAccessHandler}
+          sx={{ width: '50%' }}
+        >
+          {permissions.map((option) => (
+            <MenuItem key={option.value} value={option.value}>
+              {option.label}
+            </MenuItem>
+          ))}
+        </TextField>
+      </Box>
     </Box>
   );
 }
