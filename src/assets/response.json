@@ -107,5 +107,11 @@
         "name": "image1.jpg"
       }
     ]
+  },
+  {
+    "id": "folder-123fk0pl",
+    "type": "folder",
+    "name": "My Videos",
+    "children": []
   }
 ]

@@ -1,9 +1,9 @@
-import React, { useState, ChangeEvent } from 'react';
+import React, { useState, ChangeEvent, useEffect } from 'react';
 // components
 import Box from '@mui/material/Box';
 import { TreeView as MuiTreeView } from '@mui/x-tree-view/TreeView';
 import { TreeItem as MuiTreeItem } from '@mui/x-tree-view/TreeItem';
-import { Input, InputAdornment } from '@mui/material';
+import { Button, Input, InputAdornment } from '@mui/material';
 // icons
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
@@ -23,12 +23,21 @@ interface RenderTree {
 
 export default function TreeView() {
   const [treeData, setTreeData] = useState<RenderTree[]>(response as RenderTree[]);
+  const [query, setQuery] = useState<string>('');
+  const [filteredData, setFilteredData] = useState<RenderTree[]>(response as RenderTree[]);
+  const [selectedNodeId, setSelectedNodeId] = useState<string>('');
 
-  const onQueryChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setTreeData(filterBy(response as RenderTree[], e.target.value))
+  useEffect(() => {
+    if (query) {
+      setFilteredData(filterBy(treeData, query))
+    }
+  }, [query])
+
+  const queryChangeHandler = (e: ChangeEvent<HTMLInputElement>) => {
+    setQuery(e.target.value);
   }
 
-  function filterBy(arr: RenderTree[], query: string): RenderTree[] {
+  const filterBy = (arr: RenderTree[], query: string): RenderTree[] => {
     return query ? arr.reduce((acc: RenderTree[], item: RenderTree) => {
       if (item.children?.length) {
         const filtered = filterBy(item.children, query)
@@ -39,6 +48,24 @@ export default function TreeView() {
       return item.name?.toLowerCase().includes(query.toLowerCase()) ? [...acc, itemWithoutChildren] : acc
     }, []) : arr;
   }
+
+  const deleteNode = (nodeId: string) => {
+    const updatedTreeData = removeNode(treeData, nodeId);
+    setTreeData(updatedTreeData);
+    setFilteredData(filterBy(updatedTreeData, query));
+  };
+
+  const removeNode = (data: RenderTree[], nodeId: string): RenderTree[] => {
+    return data.reduce((acc: RenderTree[], item: RenderTree) => {
+      if (item.id === nodeId) {
+        return acc;
+      } else if (item.children?.length) {
+        return [...acc, { ...item, children: removeNode(item.children, nodeId) }];
+      } else {
+        return [...acc, item];
+      }
+    }, []);
+  };
 
   const renderTree = (nodes: RenderTree) => {
     const LabelIcon = <span style={{ display: 'flex' }}>
@@ -53,6 +80,7 @@ export default function TreeView() {
         key={nodes.id}
         nodeId={nodes.id}
         label={LabelIcon}
+        onClick={() => setSelectedNodeId(nodes.id)}
       >
         {Array.isArray(nodes.children)
           ? nodes.children.map((node) => renderTree(node))
@@ -64,22 +92,25 @@ export default function TreeView() {
   return (
     <Box sx={{ minHeight: 110, flexGrow: 1, maxWidth: 300 }}>
       <Input
-        id="input-with-icon-adornment"
+        id='input-with-icon-adornment'
         startAdornment={
-          <InputAdornment position="start">
+          <InputAdornment position='start'>
             <PageviewIcon />
           </InputAdornment>
         }
         sx={{ width: '100%', marginBottom: '10px' }}
-        onChange={onQueryChange}
+        onChange={queryChangeHandler}
       />
       <MuiTreeView
-        aria-label="rich object"
+        aria-label='rich object'
         defaultCollapseIcon={<ExpandMoreIcon />}
         defaultExpandIcon={<ChevronRightIcon />}
       >
-        {treeData.map((item) => renderTree(item))}
+        {query ? filteredData.map((item) => renderTree(item)) : treeData.map((item) => renderTree(item))}
       </MuiTreeView>
+      <Button onClick={() => deleteNode(selectedNodeId)}>
+        Delete
+      </Button>
     </Box>
   );
 }
