@@ -3,7 +3,7 @@ import React, { useState, ChangeEvent, useEffect } from 'react';
 import Box from '@mui/material/Box';
 import { TreeView as MuiTreeView } from '@mui/x-tree-view/TreeView';
 import { TreeItem as MuiTreeItem } from '@mui/x-tree-view/TreeItem';
-import { Button, Input, InputAdornment, MenuItem, TextField } from '@mui/material';
+import { Button, InputAdornment, MenuItem, TextField } from '@mui/material';
 // icons
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
@@ -14,13 +14,13 @@ import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
 import response from '../assets/response.json';
 
 
-type UserAccess = 'read' | 'write' | 'readWrite';
+type UserPermissions = 'read' | 'write' | 'readWrite';
 type UserOperations = 'read' | 'write' | 'delete';
 interface RenderTree {
   id: string;
   name: string;
   type: 'folder' | 'file';
-  access: UserAccess;
+  access: UserPermissions;
   children?: RenderTree[];
 }
 
@@ -44,12 +44,12 @@ export default function TreeView() {
   const [query, setQuery] = useState<string>('');
   const [filteredData, setFilteredData] = useState<RenderTree[]>(response as RenderTree[]);
   const [selectedNodeId, setSelectedNodeId] = useState<string>('');
-  const [userAccess, setUserAccess] = useState<UserAccess>('read');
+  const [userPermission, setUserPermission] = useState<UserPermissions>('read');
 
 
   useEffect(() => {
     if (query) {
-      setFilteredData(filterBy(treeData, query))
+      setFilteredData(filterNodes(treeData, query))
     }
   }, [query])
 
@@ -57,10 +57,10 @@ export default function TreeView() {
     setQuery(e.target.value);
   }
 
-  const filterBy = (arr: RenderTree[], query: string): RenderTree[] => {
+  const filterNodes = (arr: RenderTree[], query: string): RenderTree[] => {
     return query ? arr.reduce((acc: RenderTree[], item: RenderTree) => {
       if (item.children?.length) {
-        const filtered = filterBy(item.children, query)
+        const filtered = filterNodes(item.children, query)
         if (filtered.length) return [...acc, { ...item, children: filtered }]
       }
 
@@ -69,14 +69,14 @@ export default function TreeView() {
     }, []) : arr;
   }
 
-  const deleteNode = (nodeId: string) => {
+  const deleteNodeHandler = (nodeId: string) => {
     const nodeToDelete = findNode(treeData, nodeId);
     if (nodeToDelete) {
       const hasDeleteAccess = checkAccess(nodeToDelete, 'delete');
       if (hasDeleteAccess) {
         const updatedTreeData = removeNode(treeData, nodeId);
         setTreeData(updatedTreeData);
-        setFilteredData(filterBy(updatedTreeData, query));
+        setFilteredData(filterNodes(updatedTreeData, query));
       } else {
         alert(`You don't have permission to delete this ${nodeToDelete.type}.`);
       }
@@ -100,11 +100,11 @@ export default function TreeView() {
   const checkAccess = (node: RenderTree, operation: UserOperations): boolean => {
     switch (operation) {
       case 'read':
-        return ['read', 'readWrite'].includes(userAccess) && ['read', 'readWrite'].includes(node.access);
+        return ['read', 'readWrite'].includes(userPermission) && ['read', 'readWrite'].includes(node.access);
       case 'write':
-        return ['write', 'readWrite'].includes(userAccess) && ['write', 'readWrite'].includes(node.access);
+        return ['write', 'readWrite'].includes(userPermission) && ['write', 'readWrite'].includes(node.access);
       case 'delete':
-        return ['readWrite'].includes(userAccess) && ['readWrite'].includes(node.access);
+        return ['readWrite'].includes(userPermission) && ['readWrite'].includes(node.access);
       default:
         return false;
     }
@@ -122,8 +122,8 @@ export default function TreeView() {
     }, []);
   };
 
-  const userAccessHandler = (e: ChangeEvent<HTMLInputElement>) => {
-    setUserAccess(e.target.value as UserAccess);
+  const userPermissionHandler = (e: ChangeEvent<HTMLInputElement>) => {
+    setUserPermission(e.target.value as UserPermissions);
   }
 
   const renderTree = (nodes: RenderTree) => {
@@ -151,8 +151,8 @@ export default function TreeView() {
   return (
     <Box sx={{ minHeight: 110, flexGrow: 1, maxWidth: 300 }}>
       <TextField
-        id="outlined-start-adornment"
-        label="Search"
+        id='outlined-start-adornment'
+        label='Search'
         role='search'
         sx={{ width: '100%', mb: 2 }}
         InputProps={{
@@ -174,7 +174,7 @@ export default function TreeView() {
       <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
         <Button
           variant='outlined'
-          onClick={() => deleteNode(selectedNodeId)}
+          onClick={() => deleteNodeHandler(selectedNodeId)}
         >
           Delete
         </Button>
@@ -182,9 +182,9 @@ export default function TreeView() {
           id='outlined-select-currency'
           select
           label='Permissions'
-          value={userAccess}
-          onChange={userAccessHandler}
-          sx={{ width: '50%' }}
+          value={userPermission}
+          onChange={userPermissionHandler}
+          sx={{ width: '60%' }}
         >
           {permissions.map((option) => (
             <MenuItem key={option.value} value={option.value}>
