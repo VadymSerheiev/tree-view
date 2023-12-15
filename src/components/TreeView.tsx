@@ -1,28 +1,30 @@
-import React, { useState, ChangeEvent, useEffect } from 'react';
+import React, { useState, ChangeEvent, useEffect, useRef } from 'react';
 // components
-import Box from '@mui/material/Box';
-import { TreeView as MuiTreeView } from '@mui/x-tree-view/TreeView';
-import { TreeItem as MuiTreeItem } from '@mui/x-tree-view/TreeItem';
-import { Button, InputAdornment, MenuItem, TextField } from '@mui/material';
+import {
+  Box,
+  Button,
+  InputAdornment,
+  MenuItem,
+  TextField,
+} from '@mui/material';
+import {
+  TreeItem as MuiTreeItem,
+  TreeView as MuiTreeView,
+} from '@mui/x-tree-view';
+import FoldersToMove from './FoldersToMove';
 // icons
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import PageviewIcon from '@mui/icons-material/Pageview';
-import FolderIcon from '@mui/icons-material/Folder';
-import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
+import {
+  ChevronRight as ChevronRightIcon,
+  ExpandMore as ExpandMoreIcon,
+  Folder as FolderIcon,
+  InsertDriveFile as InsertDriveFileIcon,
+  Pageview as PageviewIcon,
+} from '@mui/icons-material';
 // data
 import response from '../assets/response.json';
+// types
+import { RenderTree, UserOperations, UserPermissions } from './types';
 
-
-type UserPermissions = 'read' | 'write' | 'readWrite';
-type UserOperations = 'read' | 'write' | 'delete';
-interface RenderTree {
-  id: string;
-  name: string;
-  type: 'folder' | 'file';
-  access: UserPermissions;
-  children?: RenderTree[];
-}
 
 const permissions = [
   {
@@ -40,18 +42,20 @@ const permissions = [
 ]
 
 export default function TreeView() {
+  const button = useRef<HTMLButtonElement>(null);
   const [treeData, setTreeData] = useState<RenderTree[]>(response as RenderTree[]);
   const [query, setQuery] = useState<string>('');
   const [filteredData, setFilteredData] = useState<RenderTree[]>(response as RenderTree[]);
   const [selectedNodeId, setSelectedNodeId] = useState<string>('');
   const [userPermission, setUserPermission] = useState<UserPermissions>('read');
-
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [selectedFolderId, setSelectedFolderId] = useState<string>('');
 
   useEffect(() => {
     if (query) {
-      setFilteredData(filterNodes(treeData, query))
+      setFilteredData(filterNodes(treeData, query));
     }
-  }, [query])
+  }, [query]);
 
   const queryChangeHandler = (e: ChangeEvent<HTMLInputElement>) => {
     setQuery(e.target.value);
@@ -61,13 +65,13 @@ export default function TreeView() {
     return query ? arr.reduce((acc: RenderTree[], item: RenderTree) => {
       if (item.children?.length) {
         const filtered = filterNodes(item.children, query)
-        if (filtered.length) return [...acc, { ...item, children: filtered }]
+        if (filtered.length) return [...acc, { ...item, children: filtered }];
       }
 
       const { children, ...itemWithoutChildren } = item;
       return item.name?.toLowerCase().includes(query.toLowerCase()) ? [...acc, itemWithoutChildren] : acc
     }, []) : arr;
-  }
+  };
 
   const deleteNodeHandler = (nodeId: string) => {
     const nodeToDelete = findNode(treeData, nodeId);
@@ -122,15 +126,49 @@ export default function TreeView() {
     }, []);
   };
 
+  const moveNode = (folderId: string, nodeId: string) => {
+    const sourceNode = findNode(treeData, nodeId);
+    const destinationFolder = findNode(treeData, folderId);
+    if (!sourceNode || !destinationFolder) {
+      alert('Source node or destination folder not found.');
+      return;
+    }
+    const sourceCopy = { ...sourceNode };
+    const hasWriteAccess = checkAccess(sourceCopy, 'write');
+
+    if (hasWriteAccess) {
+      const updatedTreeWithoutSource = removeNode(treeData, nodeId);
+      const destinationFolder = findNode(updatedTreeWithoutSource, folderId);
+
+      if (!destinationFolder) {
+        alert('Destination folder not found.');
+        return;
+      }
+
+      destinationFolder.children = [...destinationFolder.children || [], sourceCopy];
+
+      setTreeData(updatedTreeWithoutSource);
+      setFilteredData(filterNodes(updatedTreeWithoutSource, query));
+    } else {
+      alert(`You don't have permission to move this ${sourceNode.type}.`);
+    }
+  };
+
+  const moveNodeHandler = () => {
+    setIsModalOpen(false);
+    moveNode(selectedFolderId, selectedNodeId);
+    setSelectedFolderId('');
+  };
+
   const userPermissionHandler = (e: ChangeEvent<HTMLInputElement>) => {
     setUserPermission(e.target.value as UserPermissions);
-  }
+  };
 
   const renderTree = (nodes: RenderTree) => {
     const LabelIcon = <span data-testid={nodes.id} style={{ display: 'flex' }}>
       {nodes.type === 'folder' ?
-        <FolderIcon sx={{ marginRight: '10px' }} /> :
-        <InsertDriveFileIcon sx={{ marginRight: '10px' }} />}
+        <FolderIcon sx={{ mr: 1 }} /> :
+        <InsertDriveFileIcon sx={{ mr: 1 }} />}
       {nodes.name}
     </span>;
 
@@ -162,7 +200,7 @@ export default function TreeView() {
         }}
         onChange={queryChangeHandler}
       />
-      <Box>
+      <Box sx={{ mb: 2 }}>
         <MuiTreeView
           aria-label='rich object'
           defaultCollapseIcon={<ExpandMoreIcon />}
@@ -171,20 +209,36 @@ export default function TreeView() {
           {query ? filteredData.map((item) => renderTree(item)) : treeData.map((item) => renderTree(item))}
         </MuiTreeView>
       </Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
         <Button
           variant='outlined'
           onClick={() => deleteNodeHandler(selectedNodeId)}
         >
           Delete
         </Button>
+        <Button
+          ref={button}
+          variant='outlined'
+          onClick={() => setIsModalOpen(!isModalOpen)}
+        >
+          Move to ...
+        </Button>
+        <FoldersToMove
+          anchorEl={button.current}
+          data={treeData}
+          open={isModalOpen}
+          setFolderId={setSelectedFolderId}
+          moveNodeHandler={moveNodeHandler}
+        />
+      </Box>
+      <Box sx={{ mb: 2 }}>
         <TextField
           id='outlined-select-currency'
           select
           label='Permissions'
           value={userPermission}
           onChange={userPermissionHandler}
-          sx={{ width: '60%' }}
+          sx={{ width: '100%' }}
         >
           {permissions.map((option) => (
             <MenuItem key={option.value} value={option.value}>
