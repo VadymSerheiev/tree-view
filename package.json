@@ -5,7 +5,6 @@
   "main": "./src/index.js",
   "scripts": {
     "start": "webpack-dev-server .",
-    "build": "webpack .",
     "test": "jest",
     "test:watch": "jest --watch"
   },
